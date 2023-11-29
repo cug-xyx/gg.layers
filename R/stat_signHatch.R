@@ -10,11 +10,16 @@ NULL
 #' "PANEL"(optional), "group"(optional).
 #' @param hatch boolean. If `FALSE`, a polygon will be returned, other than lines.
 #' Meanwhile, the parameters `density` and `angle` will be ignored.
+#' @param crs one of (i) character: a string accepted by GDAL, 
+#' (ii) integer, a valid EPSG value (numeric), or (iii) an object of class crs. 
+#' This crs determines the coordinate system you use when displaying 
+#' significance in the ggplot2 layer. The default display is in the 
+#' "EPSG:4326" (WGS 84) coordinate system.
 #'
 #' @return A multi-line sf object
 #' @keywords internal
 #' @export
-st_df2hatch <- function(data, density = 1, angle = 45, hatch = TRUE){
+st_df2hatch <- function(data, density = 1, angle = 45, hatch = TRUE, crs="EPSG:4326"){
     if (!is.null(data$mask)) {
         ind = which(data$mask)
         if (length(ind) == 0) return(data.frame())
@@ -25,6 +30,7 @@ st_df2hatch <- function(data, density = 1, angle = 45, hatch = TRUE){
     st = st_point2poly(d) # sf_poly
     # convert poly to hatch
     if (hatch) st <- st_hatched_polygon(st, density = density, angle = angle)
+    st <- sf::st_transform(st, crs = crs)
 
     if (!is.null(data$PANEL) && !is.null(data$group)) {
         data.frame(geometry = st$geometry, PANEL = data$PANEL[1], group = data$group[1])
@@ -38,8 +44,8 @@ st_df2hatch <- function(data, density = 1, angle = 45, hatch = TRUE){
 #' @usage NULL
 #' @export
 StatSignHatch <- ggproto("StatSignHatch", StatSf,
-    compute_panel = function(self, data, scales, coord, density = 1, angle = 45) {
-        dat = st_df2hatch(data, density, angle)
+    compute_panel = function(self, data, scales, coord, density = 1, angle = 45, crs = "EPSG:4326") {
+        dat = st_df2hatch(data, density, angle, crs = crs)
         # https://github.com/tidyverse/ggplot2/blob/main/R/stat-sf.R
         # Compute stat_sf() by panel instead of group (#5170), compute_panel, compute_group
         ggproto_parent(StatSf, self)$compute_panel(dat, scales, coord)
@@ -52,6 +58,7 @@ StatSignHatch <- ggproto("StatSignHatch", StatSf,
 #'
 #' @inheritParams st_hatched_polygon
 #' @inheritParams ggplot2::geom_sf
+#' @inheritParams st_df2hatch
 #'
 #' @section Aesthetics:
 #' [geom_signHatch()] requires the following aesthetics:
@@ -66,7 +73,7 @@ stat_signHatch <- function(
     position = "identity",
     show.legend = NA, inherit.aes = TRUE,
     ...,
-    density = 1, angle = 45)
+    density = 1, angle = 45, crs="EPSG:4326")
 {
     c(layer_sf(
         data = data,
@@ -78,6 +85,7 @@ stat_signHatch <- function(
         inherit.aes = inherit.aes,
         params = list(
             density = density, angle = angle,
+            crs = crs,
             ...
         )), coord_sf(default = TRUE))
 }
@@ -88,7 +96,7 @@ geom_signHatch <- function(mapping = aes(), data = NULL, stat = "signHatch",
     position = "identity", show.legend = NA,
     inherit.aes = TRUE,
     ...,
-    density = 1, angle = 45)
+    density = 1, angle = 45, crs="EPSG:4326")
 {
     c(
         layer_sf(
@@ -101,6 +109,7 @@ geom_signHatch <- function(mapping = aes(), data = NULL, stat = "signHatch",
             inherit.aes = inherit.aes,
             params = list(
                 density = density, angle = angle,
+                crs = crs,
                 ...
             )
         ),
