@@ -27,10 +27,11 @@ st_df2hatch <- function(data, density = 1, angle = 45, hatch = TRUE, crs="EPSG:4
     }
     d = data[, c("x", "y")]
 
-    st = st_point2poly(d) # sf_poly
+    # st = st_point2poly(d) # sf_poly
+    st = st_point2poly(d) |> st_transform(crs = crs)
     # convert poly to hatch
     if (hatch) st <- st_hatched_polygon(st, density = density, angle = angle)
-    st <- sf::st_transform(st, crs = crs)
+    # st <- sf::st_transform(st, crs = crs)
 
     if (!is.null(data$PANEL) && !is.null(data$group)) {
         data.frame(geometry = st$geometry, PANEL = data$PANEL[1], group = data$group[1])

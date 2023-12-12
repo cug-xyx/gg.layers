@@ -65,12 +65,13 @@ GeomTaylor <- ggproto("GeomTaylor", GeomPoint,
   required_aes = c("sd.obs", "sd.mod", "R"),
   default_aes = aes(
     shape = 19, colour = "black", size = 5, fill = "black",
-    alpha = 1, stroke = 0.5
+    alpha = 1, stroke = 0.5, 
+    starshape = 1, starstroke = 0.5, angle = 0, phase = 0, subset = NULL
   ),
   setup_data = function(data, params) {
     data %<>% transform(x = sd.mod * R, y = sd.mod * sin(acos(R)))
     maxsd <- max(data$sd.obs, data$sd.mod) * 1.2
-    
+
     data$ymin_final <- 0
     data$ymax_final <- maxsd
     data$xmin_final <- 0
@@ -191,7 +192,7 @@ GeomTaylor <- ggproto("GeomTaylor", GeomPoint,
       size = 4, angle = angles, colour = "black", alpha = 1, hjust = 0
     )
     d_tick_title = data.table(
-      x = 0.82 * maxsd, y = 0.82 * maxsd, label = "Correlation",
+      x = 0.82 * maxsd, y = 0.82 * maxsd, label = "Correlation coefficient",
       size = 5, colour = "black", alpha = 1, angle = 315
     )
 
@@ -201,10 +202,11 @@ GeomTaylor <- ggproto("GeomTaylor", GeomPoint,
                        alpha = 1, stroke = 0.5)
     d_obs_txt = cbind(d_obs, label = "Observed", fontsize = 8, vjust = -1, angle = 0)
 
-
+    print(data)
     grid::gList(
       # g,
-      GeomPoint$draw_panel(data, panel_params, coord),
+      ggstar::GeomStar$draw_panel(data, panel_params, coord),
+      # GeomPoint$draw_panel(data, panel_params, coord),
       GeomPoint$draw_panel(d_obs, panel_params, coord),
       GeomText$draw_panel(d_obs_txt, panel_params, coord),
 
@@ -219,7 +221,8 @@ GeomTaylor <- ggproto("GeomTaylor", GeomPoint,
       GeomText$draw_panel(d_rmse_txt, panel_params, coord),
       GeomLine$draw_panel(d_rmse, panel_params, coord)
     )
-  }
+  },
+  draw_key = ggstar::draw_key_star
 )
 
 
