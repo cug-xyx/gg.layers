@@ -5,7 +5,7 @@ ggh4x::guide_axis_minor
 #' @importFrom dplyr mutate
 #' @export 
 add_barchart <- function(
-    value, brks, cols,
+    value, brks, cols, bar_frame = NA,
     fontsize = 12,
     tck_size = 0.3,
     tck_length = unit(0.05 * 2, "cm"),
@@ -25,34 +25,29 @@ add_barchart <- function(
   labels_major <- brks[at_major]
   labels_major[is.infinite(labels_major)] <- ""
 
-  p <- ggplot(dat, aes(I + 0.5, perc)) +
+  p <- ggplot(dat, aes(I + 0.5, perc)) + theme_classic() +
     # geom_bar(aes(y=..density..), position = "dodge", width = 1)
-    geom_bar(stat = "identity", fill = cols, na.rm = F) +
+    geom_bar(stat = "identity", fill = cols, na.rm = F, color=bar_frame) +
     # geom_histogram(breaks = brks, na.rm = F, fill = cols)
     # geom_histogram(aes(y=after_stat(count/sum(count))), breaks = brks, na.rm = F, fill = cols) +
     labs(y = "Fraction (%)", x = NULL) +
     theme(
+      plot.background = element_blank(),
+      panel.background = element_blank(),
       plot.margin = margin(l = 5, b = 1),
-      axis.title = element_text(size = fontsize + 1),
-      axis.text = element_text(size = fontsize, colour = "black"),
-      panel.border = element_rect(linewidth = 0.3, colour = "grey", fill = "transparent"),
-      # plot.background = element_blank(),
-      panel.background = element_rect(fill = "transparent"),
-      # axis.line = element_line(
-      #     arrow = grid::arrow(length = unit(0.4, "cm"), type = "closed"),
-      #     colour = "black",
-      #     size = 0.5, linetype = "solid"),
+      axis.title = element_text(size = fontsize),
+      axis.text.y = element_text(size = fontsize, colour = "black"),
+      axis.text.x = element_blank(),
+      axis.ticks.x = element_blank(),
       axis.ticks = element_line(linewidth = tck_size),
       axis.ticks.length = tck_length
     ) +
-    scale_y_continuous(labels = scales::percent) +
+    scale_y_continuous(labels = scales::percent, expand = c(0, 0)) +
     scale_x_continuous(
-      # expand = c(-1, 1)*0.1,
       guide = "axis_minor",
       breaks = at_major,
       labels = labels_major, minor_breaks = at_minor
     )
-  # scale_y_continuous(labels = scales::percent_format(accuracy = 1))
   if (!is.null(theme)) p <- p + theme
   p
 }
